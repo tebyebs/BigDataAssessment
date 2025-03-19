@@ -5,38 +5,70 @@ date: "12/02/2025"
 output:
   html_document: default
   pdf_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Necessary packages that you'll need to install using the "install.packages(" ... ")" command:
-- MOSAIC
-- phytools
-- popbio
-- popdemo
-- Rage
-- Rcompadre
-- remotes
-- rotl (the open tree of life)
-- taxize
-- tidyverse
+Necessary packages that you'll need to install using the
+"install.packages(" ... ")" command: - MOSAIC - phytools - popbio -
+popdemo - Rage - Rcompadre - remotes - rotl (the open tree of life) -
+taxize - tidyverse
+
+```{r}
+# List of required packages
+required_packages <- c(
+  "mosaic", "phytools", "popbio", "popdemo", "Rage", "Rcompadre",
+  "remotes", "rotl", "taxize", "tidyverse")
+
+# Installs the missing packages
+missing_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
+if(length(missing_packages)) {
+  install.packages(missing_packages)
+}
+#Loads the missing packages
+lapply(required_packages, library, character.only = TRUE)
+```
 
 ## 0. Introduction
 
-In this computing practical, you will access multiple resources online to draw inferences on ecological processes at the regional and global levels. Namely, you will access the following online repositories to obtain information:
-  - COMADRE Matrix Animal Database: an open-access repository of animal demographic information.
-  - IUCN Redlist: dataset of conservation status of animals, plants, and fungi
-  - The open tree of life: A repository to pull phylogenetic trees
-  
-The following sections walk you through how to access, download, and manipulate the information step by step:
+In this computing practical, you will access multiple resources online
+to draw inferences on ecological processes at the regional and global
+levels. Namely, you will access the following online repositories to
+obtain information: - COMADRE Matrix Animal Database: an open-access
+repository of animal demographic information. - IUCN Redlist: dataset of
+conservation status of animals, plants, and fungi - The open tree of
+life: A repository to pull phylogenetic trees
+
+The following sections walk you through how to access, download, and
+manipulate the information step by step:
 
 ## 1. Accessing demographic data:
 
-COMADRE is a database of matrix population models (MPMs, hereafter) for animal species. This open-access repository can be further investigated here: https://compadre-db.org, where you will also find information about the demography of plants (COMPADRE). COMADRE currently contains 3,488 MPMs from 415 studies across 429 animal species.
+COMADRE is a database of matrix population models (MPMs, hereafter) for
+animal species. This open-access repository can be further investigated
+here: <https://compadre-db.org>, where you will also find information
+about the demography of plants (COMPADRE). COMADRE currently contains
+3,488 MPMs from 415 studies across 429 animal species.
 
-In your lectures in years 2, you were introduced to MPMs, and have more recently examined their transient behaviour in an ecology resilience context. From those lectures, you may remember that MPMs describe the dynamics of a given population in discrete time (e.g. last year, this year; a week ago vs. today; 12h ago vs. now). MPMs explicitly consider how key demographic processes, such as survival and reproduction (a.k.a. "vital rates"), change among individuals in the studied population as a function of key properties of individuals in it. Specifically, these models examine how individual heterogeneity relates to the values of these vital rates by studying the role that one (or more) individual-level characteristics (a.k.a. "states") has/have on the vital rates. In MPMs, individuals in the population are typically classified by age (e.g. 0, 1, 2 years old), developmental stage (e.g. juvenile, adult, senescent), and/or size ranges (e.g. short, medium, tall).
+In your lectures in years 2, you were introduced to MPMs, and have more
+recently examined their transient behaviour in an ecology resilience
+context. From those lectures, you may remember that MPMs describe the
+dynamics of a given population in discrete time (e.g. last year, this
+year; a week ago vs. today; 12h ago vs. now). MPMs explicitly consider
+how key demographic processes, such as survival and reproduction (a.k.a.
+"vital rates"), change among individuals in the studied population as a
+function of key properties of individuals in it. Specifically, these
+models examine how individual heterogeneity relates to the values of
+these vital rates by studying the role that one (or more)
+individual-level characteristics (a.k.a. "states") has/have on the vital
+rates. In MPMs, individuals in the population are typically classified
+by age (e.g. 0, 1, 2 years old), developmental stage (e.g. juvenile,
+adult, senescent), and/or size ranges (e.g. short, medium, tall).
 
 ```{r, message=FALSE, error=FALSE, warning=FALSE, results='hide'}
 #Clear the R environment
@@ -64,11 +96,15 @@ dim(comadre)
 
 ```
 
-COMADRE contains the key MPM information as well as plenty of metadata. To explore what the names of the metadata mean, please consult with: https://jonesor.github.io/CompadreGuides/user-guide.html). Briefly, the metadata contains information relating to:
-  - Full taxonomy of the studied species (e.g., Kingdom, Phylum, Class,..., accepted Latin name, common name)
-  - Original source (e.g. year of publication, journal name, authors)
-  - Details of the study (e.g. start and end year, criteria used to construct the MPM, GPS coordinates of the population, etc.)
-  
+COMADRE contains the key MPM information as well as plenty of metadata.
+To explore what the names of the metadata mean, please consult with:
+<https://jonesor.github.io/CompadreGuides/user-guide.html>). Briefly,
+the metadata contains information relating to: - Full taxonomy of the
+studied species (e.g., Kingdom, Phylum, Class,..., accepted Latin name,
+common name) - Original source (e.g. year of publication, journal name,
+authors) - Details of the study (e.g. start and end year, criteria used
+to construct the MPM, GPS coordinates of the population, etc.)
+
 ```{r}
 #Explore the metadata in COMADRE
 comadre@data
@@ -90,7 +126,13 @@ comadre1 <- subset(comadre,
 dim(comadre1)
 ```
 
-There is a bit of more fine-tuning we need to do before we can calculate demographic properties from these MPMs. We will use the function cdb_flag() to add columns to the database flagging potential issues with these MPMs, such as missing values, or MPMs that don’t meet assumptions necessary to calculate population growth rates (like ergodicity, irreducibility, or primitivity - you can read more on that here: https://onlinelibrary.wiley.com/doi/full/10.1111/j.1461-0248.2011.01659.x).
+There is a bit of more fine-tuning we need to do before we can calculate
+demographic properties from these MPMs. We will use the function
+cdb_flag() to add columns to the database flagging potential issues with
+these MPMs, such as missing values, or MPMs that don’t meet assumptions
+necessary to calculate population growth rates (like ergodicity,
+irreducibility, or primitivity - you can read more on that here:
+<https://onlinelibrary.wiley.com/doi/full/10.1111/j.1461-0248.2011.01659.x>).
 
 ```{r}
 comadre_flags <- cdb_flag(comadre1)
@@ -106,8 +148,17 @@ comadre_sub <- subset(comadre_flags,
 dim(comadre_sub)
 ```
 
-Now that you have subset the data to narrow-down your research to mammals, you may want to take a look at some MPMs in the data. Whenever possible, the MPM of a species, examined at a given location, interval, and under a given kind of experimental manipulation (e.g. control, fire, hunting, etc.) has been split by the COM(P)ADRE team into its constituent submatrices, such that the matrix *A*, is the summation of the submatrices that describe processes that depend on survival (submatrix *U*), on sexual reproduction (*F*), and clonality (*C*). Note that when a given animal does not reproduce clonally, *C* is a matrix of zeros.
-  
+Now that you have subset the data to narrow-down your research to
+mammals, you may want to take a look at some MPMs in the data. Whenever
+possible, the MPM of a species, examined at a given location, interval,
+and under a given kind of experimental manipulation (e.g. control, fire,
+hunting, etc.) has been split by the COM(P)ADRE team into its
+constituent submatrices, such that the matrix *A*, is the summation of
+the submatrices that describe processes that depend on survival
+(submatrix *U*), on sexual reproduction (*F*), and clonality (*C*). Note
+that when a given animal does not reproduce clonally, *C* is a matrix of
+zeros.
+
 ```{r}
 #Explore some MPMs in your subset database
 #The first MPM stored in your data is:
@@ -124,7 +175,16 @@ comadre_sub@data[1,]
 #You can explore other hits by changing "1" for another index number
 ```
 
-Now we are going to obtain some key properties from these MPM. Namely, we will estimate population growth rate and generation time. As you may remember from lecture, the population growth rate ($\lambda$) corresponds to the dominant eigenvalue of the MPM *A*, and it projects the rate of growth (if $\lambda$ > 1) or decline ($\lambda$ < 1) of the population. One of the three definitions of generation time (T) is the mean age of reproductive individuals in the population. This life history trait is tightly linked to the rate of population turnover, and it is frequently used in assessments of vulnerability of the IUCN (e.g. https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.13368).
+Now we are going to obtain some key properties from these MPM. Namely,
+we will estimate population growth rate and generation time. As you may
+remember from lecture, the population growth rate ($\lambda$)
+corresponds to the dominant eigenvalue of the MPM *A*, and it projects
+the rate of growth (if $\lambda$ \> 1) or decline ($\lambda$ \< 1) of
+the population. One of the three definitions of generation time (T) is
+the mean age of reproductive individuals in the population. This life
+history trait is tightly linked to the rate of population turnover, and
+it is frequently used in assessments of vulnerability of the IUCN (e.g.
+<https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.13368>).
 
 ```{r, message=FALSE, error=FALSE, warning=FALSE}
 #Obtain population growth rates using the function 
@@ -172,7 +232,13 @@ if (length(which(is.infinite(comadre_sub$gen_T)))>0) {
 
 ```
 
-Note that the object 'comadre_sub' contains quite a few MPMs for each species. Sometimes these MPMs correspond to different years (e.g., 2000 to 2001, 2001, to 2002...) within the same population, and sometimes they may refer to different populations, or even come from different publications/research groups. As such, for the purposes of today's exercise, and in the interest of time, we will only sample one MPM per species:
+Note that the object 'comadre_sub' contains quite a few MPMs for each
+species. Sometimes these MPMs correspond to different years (e.g., 2000
+to 2001, 2001, to 2002...) within the same population, and sometimes
+they may refer to different populations, or even come from different
+publications/research groups. As such, for the purposes of today's
+exercise, and in the interest of time, we will only sample one MPM per
+species:
 
 ```{r, message=FALSE, error=FALSE, warning=FALSE}
 #Identifying which species names are unique:
@@ -188,11 +254,27 @@ dim(comadre_sub)
 
 ## 2. Accessing IUCN Red list status data:
 
-Established in 1964, the International Union for Conservation of Nature’s Red List of Threatened Species has evolved to become the world’s most comprehensive information source on the global conservation status of animal, fungi and plant species. The IUCN Red List is a critical indicator of the health of the world’s biodiversity. Far more than a list of species and their status, it is a powerful tool to inform and catalyze action for biodiversity conservation and policy change, critical to protecting the natural resources we need to survive. It provides information about range, population size, habitat and ecology, use and/or trade, threats, and conservation actions that will help inform necessary conservation decisions.
+Established in 1964, the International Union for Conservation of
+Nature’s Red List of Threatened Species has evolved to become the
+world’s most comprehensive information source on the global conservation
+status of animal, fungi and plant species. The IUCN Red List is a
+critical indicator of the health of the world’s biodiversity. Far more
+than a list of species and their status, it is a powerful tool to inform
+and catalyze action for biodiversity conservation and policy change,
+critical to protecting the natural resources we need to survive. It
+provides information about range, population size, habitat and ecology,
+use and/or trade, threats, and conservation actions that will help
+inform necessary conservation decisions.
 
-To access the API (Application Programming Interface) of the IUCN, you might want to apply for a token, which can take a few days, or simply use the one I am providing you below. Do please feel free to apply for your own token if you would like - to do so by following these steps: https://apiv3.iucnredlist.org. Watch details here: https://www.youtube.com/watch?v=4T6GXtptmj4
+To access the API (Application Programming Interface) of the IUCN, you
+might want to apply for a token, which can take a few days, or simply
+use the one I am providing you below. Do please feel free to apply for
+your own token if you would like - to do so by following these steps:
+<https://apiv3.iucnredlist.org>. Watch details here:
+<https://www.youtube.com/watch?v=4T6GXtptmj4>
 
-However, to expedite this step, I have accessed and downloaded the data already:
+However, to expedite this step, I have accessed and downloaded the data
+already:
 
 ```{r, message=FALSE, error=FALSE, warning=FALSE, results='hide'}
 #Install and call the R package 
@@ -202,23 +284,27 @@ library(taxize)
 #This is the token that I obtained from the steps detailed above. It is entirely possible that the API of the IUCN will reject so many requests from independent computers using the same token... so be patient!
 
 #https:/apiv3.iucnredlist.org', provide IUCN access
-API_token <- "8d9c556bb4aa2efeacdc49775c0d0514b42139c96d5ed0f6b9ca5a495ffa49a4"
+#API_token <- "8d9c556bb4aa2efeacdc49775c0d0514b42139c96d5ed0f6b9ca5a495ffa49a4"
 
 #run the summary from IUCN for our species names
-IUCN.list <- iucn_summary(comadre_sub$SpeciesAccepted, distr_detail = FALSE, key = API_token)
+#IUCN.list <- iucn_summary(comadre_sub$SpeciesAccepted, distr_detail = FALSE, key = API_token)
+
+
+
 ```
 
-With these data, we want to do some wrangling. This will be the case almost every time you access data online. Here, we just want information on the IUCN redlist status of each of our unique mammal species, of which there are 37. Then we will bind this information back on to the comadre data.
+With these data, we want to do some wrangling. This will be the case
+almost every time you access data online. Here, we just want information
+on the IUCN redlist status of each of our unique mammal species, of
+which there are 37. Then we will bind this information back on to the
+comadre data.
 
 ```{r}
 #This IUCN list contains a lot of information for each species. We just want 
 #their classification and their species name to link to the species
 library(tidyverse)
 
-IUCN_data <- lapply(IUCN.list, function(x){
-  return(tibble(IUCNstatus = x$status))}) %>% 
-  bind_rows() %>% 
-  mutate(SpeciesAccepted = comadre_sub$SpeciesAccepted)
+IUCN_data <- read.csv("IUCN_comadre_compadre.csv")
 
 #Now link back to original data using the left_join() function
 comadre_iucn <- comadre_sub %>%
@@ -250,7 +336,9 @@ comadre_iucn$iucn_colour[which(comadre_iucn$IUCNstatus == "Not Assessed")] <- "B
   
 ```
 
-Now explore both visually and statistically the relationships between generation time, on the one hand, and population growth rate, on the other, with IUCN status of mammals in COMADRE:
+Now explore both visually and statistically the relationships between
+generation time, on the one hand, and population growth rate, on the
+other, with IUCN status of mammals in COMADRE:
 
 ```{r}
 
@@ -279,13 +367,21 @@ summary(ANOVA_lambda)
 
 ```
 
-From the relationships explored above, generation time -but not population growht rate- is predicted by IUCN
+From the relationships explored above, generation time -but not
+population growht rate- is predicted by IUCN
 
 ## 3. Phylogenetic tree and phylogenetic analyses
 
-The Open Tree of Life is an open-access online repository that offers phylogenetic information across the most comprehensive group of species across the Tree of Life. Further information can be found here https://tree.opentreeoflife.org/opentree/argus/opentree13.4@ott93302 and here https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12593.
+The Open Tree of Life is an open-access online repository that offers
+phylogenetic information across the most comprehensive group of species
+across the Tree of Life. Further information can be found here
+[https://tree.opentreeoflife.org/opentree/argus/opentree13.4\@ott93302](https://tree.opentreeoflife.org/opentree/argus/opentree13.4@ott93302){.uri}
+and here
+<https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12593>.
 
-The first step is to run a taxonomic check on your species names, in case these are not taxonomically accepted ("up to date" according the latest biological evidence regarding species relationships)
+The first step is to run a taxonomic check on your species names, in
+case these are not taxonomically accepted ("up to date" according the
+latest biological evidence regarding species relationships)
 
 ```{r}
 comadre_sub <- as.data.frame(comadre_sub$data)
@@ -337,7 +433,14 @@ plot(my_tree, type = "fan")
 
 ```
 
-Now let's try to do something more interesting. Let us map the values of IUCN status, population growth rate, and generation time along the phylogeny to examine potential patterns of phylogenetic association. For that, the tree we obtained from OTL will not work because the branches are not dated. That is, the tree holds the structure, but has no information about the time since emergence between sister clades. Instead, we will turn to a tree that I have prepared for you that does have that information
+Now let's try to do something more interesting. Let us map the values of
+IUCN status, population growth rate, and generation time along the
+phylogeny to examine potential patterns of phylogenetic association. For
+that, the tree we obtained from OTL will not work because the branches
+are not dated. That is, the tree holds the structure, but has no
+information about the time since emergence between sister clades.
+Instead, we will turn to a tree that I have prepared for you that does
+have that information
 
 ```{r}
 #We will be using the R package phytools
@@ -396,12 +499,12 @@ plot(mammal_contMap_gent_T, fsize=c(0.7,0.8), leg.txt="log(generation time) (yea
 
 ## Further references:
 
-https://compadre-db.org
+<https://compadre-db.org>
 
-https://github.com/jonesor/Rcompadre
+<https://github.com/jonesor/Rcompadre>
 
-https://jonesor.github.io/Rage/
+<https://jonesor.github.io/Rage/>
 
-https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12593
+<https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12593>
 
-http://www.phytools.org/Cordoba2017/ex/15/Plotting-methods.html
+<http://www.phytools.org/Cordoba2017/ex/15/Plotting-methods.html>
