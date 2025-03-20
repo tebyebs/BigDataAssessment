@@ -257,6 +257,8 @@ dotTree(pruned_tree,perfmode,colors= perf_cols,
     )
 ```
 
+The above tree was plotted using the dotTree function, and the population performance variable was added using the mutate function.
+
 ```{r}
 #Making a factor for iucn category
 iucnmode <-as.character(performance_reptiles_iucn$IUCNstatus)
@@ -272,18 +274,26 @@ phylomatrix <- data.frame(perfmode, iucnmode, row.names = names(perfmode))
 
 
 dotTree(pruned_tree,
-        as.matrix(phylomatrix),
+        phylomatrix,
         colors = c(perf_cols, iucn_cols),
         ftype="i",
         fsize=0.7,
         legend = F
     )
-
-
+legend("topleft",
+       legend = c("Increase", "Decline"),
+       fill = c("green", "red"),
+       title = "Population Performance",
+       cex = 1)
+legend("bottomleft",
+       legend = c("Endangered", "Vulnerable", "Near Threatened", "Least Concern", "Not Assessed"),
+       fill = c("orange", "yellow", "darkgreen", "green", "blue"),
+       title = "IUCN Status",
+       cex = 0.8)
 
 
 ```
-
+The graph above is made again using the dotTree function, but this time a matrix containing population performance and IUCN information is used to show both factors. There does not seem to be a clear correlation between the two, suggesting that even populations that are growing can be endangered. 
 
 
 
