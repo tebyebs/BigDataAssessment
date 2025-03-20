@@ -1,0 +1,50 @@
+---
+title: "Big Data Computer Assessment"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+Candidate Number: 1073601
+
+```{r, echo=FALSE}
+# List of required packages
+required_packages <- c(
+  "mosaic", "phytools", "popbio", "popdemo", "Rage", "Rcompadre",
+  "remotes", "rotl", "taxize", "tidyverse")
+
+# Installs the missing packages
+missing_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
+if(length(missing_packages)) {
+  install.packages(missing_packages)
+}
+#Loads the missing packages
+lapply(required_packages, library, character.only = TRUE)
+```
+
+```{r}
+#Downloading the Comadre dataset
+#Fetch the most recent version
+comadre <- cdb_fetch("comadre")
+
+#Selecting Reptiles
+#located worldwide and not from captivity:
+comadre_rep <- subset(comadre,
+                   # Consider only reptiles
+                   Class == "Reptilia" & 
+                   # anywhere in the world so no lat requirement
+                   # studied under "control" (i.e. no treatment) conditions
+                   MatrixTreatment == "Unmanipulated" &
+                   # and only from "W"ild populations
+                   MatrixCaptivity == "W") 
+#Flag and remove matrices with missing values or dont meet assumptions of ergodicity
+comadre_rep_flag <- cdb_flag(comadre_rep)
+comadre_reptiles <- subset(comadre_rep_flag,
+                      check_NA_A == FALSE &
+                      check_ergodic == TRUE)
+```
+
+**Question 1**
+
+Show a histogram of the population growth rate, and a separate histogram of the generation
+time of your subset of species. Describe the patterns. Do they make sense to you?
