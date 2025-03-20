@@ -242,8 +242,8 @@ species:
 
 ```{r, message=FALSE, error=FALSE, warning=FALSE}
 #Identifying which species names are unique:
-unique_comadre <- unique(comadre_sub$SpeciesAccepted)
-unique_comadre
+#unique_comadre <- unique(comadre_sub$SpeciesAccepted)
+#unique_comadre
 #Resulting in 37 mammal species
 
 #We could sample a single MPM wihtin each species in different ways, but here we are going to simply selecting the first entry in the whole of comadre_sub where there is a new species using the command 'duplicated'. This function examines element by element in a vector whether the next element has already appeared before in the vector.
@@ -384,7 +384,7 @@ case these are not taxonomically accepted ("up to date" according the
 latest biological evidence regarding species relationships)
 
 ```{r}
-comadre_sub <- as.data.frame(comadre_sub$data)
+
 #Once again, state your species names
 my_taxa <- comadre_sub$SpeciesAccepted
 
@@ -467,19 +467,19 @@ pruned_tree
 comadre_iucn$OTL_unique_name[which(comadre_iucn$OTL_unique_name%in%pruned_tree$tip.label==F)]
 
 #So we now have to elimnate "Canis lupus" and "Theropithecus gelada" from our data to proceed with the next steps:
-comadre_iucn <- comadre_iucn[-which(comadre_iucn$OTL_unique_name%in%pruned_tree$tip.label==F),]
-dim(comadre_iucn)
+elim_comadre_iucn <- comadre_iucn[-which(comadre_iucn$OTL_unique_name%in%pruned_tree$tip.label==F),]
+dim(elim_comadre_iucn)
 
 #Next, we need to reorder the comadre_iucn order so the species appear in the same order in which they appear in the tree
-comadre_iucn <- comadre_iucn[match(pruned_tree$tip.label,comadre_iucn$OTL_unique_name),]
-dim(comadre_iucn)
+order_comadre_iucn <- elim_comadre_iucn[match(pruned_tree$tip.label,elim_comadre_iucn$OTL_unique_name),]
+dim(order_comadre_iucn)
 
 #Checking that the order is the same between the object and the tree
-comadre_iucn$OTL_unique_name
+order_comadre_iucn$OTL_unique_name
 pruned_tree$tip.label
 
 # Let us now plot the values of population growth rate at the tips of the phylogeny, and reconstruct the ancestral state of the originating lineange
-log_lambdas <- log(setNames(comadre_iucn$lambda, rownames(comadre_iucn)))
+log_lambdas <- log(setNames(order_comadre_iucn$lambda, rownames(order_comadre_iucn)))
 
 # create "contMap" object, which allows for the reconstruction of likely ancestral traits
 #my_tree2<-di2multi(pruned.tree)
@@ -490,7 +490,7 @@ plot(mammal_contMap_lambda, fsize=c(0.7,0.8), leg.txt="log(population growth rat
 par(mar=c(5.1,4.1,4.1,2.1)) ## reset margins to default
 
 #Let's do the same thing for generation time
-log_gen_T <- log(setNames(comadre_iucn$gen_T, rownames(comadre_iucn)))
+log_gen_T <- log(setNames(order_comadre_iucn$gen_T, rownames(order_comadre_iucn)))
 mammal_contMap_gen_T <- contMap(pruned_tree, log_gen_T,plot=FALSE,res=200)
 mammal_contMap_gent_T <- setMap(mammal_contMap_gen_T, c("white","light blue","blue","violet","purple"))
 plot(mammal_contMap_gent_T, fsize=c(0.7,0.8), leg.txt="log(generation time) (years)")
