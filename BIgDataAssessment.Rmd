@@ -228,3 +228,62 @@ plot(reptiles_contMap_gen_T, fsize=c(0.7,0.8), leg.txt="log(generation time) (ye
 ***Generation time:*** The phylogenetic tree shows high levels of inertia, with clades such as crocodylus maintaining long generation times throughout history. Clades that have evolved shorter generation times, on the other hand, such as Xenosaurus or Sceloporus, are unlikely to recover longer generation times as changing a vital life history trait like lifespan is very difficult.
 
 **Question 5**
+
+Create a new variable called “Population_performance”. Assign “Decline” or “Increase” to
+those species whose unique population growth rate is <1 or >1, respectively. This variable is
+no longer continuous (like population growth rate, lambda was in your original R
+MarkDown). Explore in this handy website (http://blog.phytools.org ) a way to plot that new
+trait on your phylogenetic tree. Then add another column to the phylogeny in such a way that
+you show the conservation status of those species (collected in previous steps from the
+IUCN). 
+
+```{r warning=FALSE}
+#Creating the new variable 
+performance_reptiles_iucn <- order_comadre_reptiles_iucn %>%
+  mutate(Population_performance = case_when(
+    lambda > 1 ~ "Increase",
+    lambda < 1 ~ "Decline",
+  ))
+
+row.names(performance_reptiles_iucn) <- performance_reptiles_iucn$SpeciesAccepted
+#Plotting the new tree, first creating a factor for population performance
+
+perfmode <- as.factor(setNames(performance_reptiles_iucn$Population_performance, rownames(performance_reptiles_iucn)))
+perf_cols <- c("Increase" = "green", "Decline" = "red") 
+
+dotTree(pruned_tree,perfmode,colors= perf_cols,
+    ftype="i",
+    fsize=0.7,
+    )
+```
+
+```{r}
+#Making a factor for iucn category
+iucnmode <-as.character(performance_reptiles_iucn$IUCNstatus)
+
+#Setting colours for the traits
+ 
+iucn_cols <- c("Endangered" = "orange", "Vulnerable" = "yellow",
+               "Near Threatened" = "darkgreen", "Least Concern" = "green",
+               "Not Assessed" = "blue")
+
+#Combining population performance and iucn status into one matrix
+phylomatrix <- data.frame(perfmode, iucnmode, row.names = names(perfmode))
+
+
+dotTree(pruned_tree,
+        as.matrix(phylomatrix),
+        colors = c(perf_cols, iucn_cols),
+        ftype="i",
+        fsize=0.7,
+        legend = F
+    )
+
+
+
+
+```
+
+
+
+
