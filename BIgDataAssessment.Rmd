@@ -103,11 +103,106 @@ spearman_result <- cor.test(comadre_reptiles_clean$lambda,
 
 print(spearman_result)
 ```
-Interestingly, we observe that there is no significant correlation as p > 0.05, with a very weak negative correlation coefficient (rho) of -0.119. This is surprising as one might have expected species with higher population growth rates to have shorter generation times, which would hypothetically lead to a strong negative correlation. Given the lack of significance of the calculated correlation, however, this does not seem to be the case. 
+
+Interestingly, we observe that there is no significant correlation as p \> 0.05, with a very weak negative correlation coefficient (rho) of -0.119. This is surprising as one might have expected species with higher population growth rates to have shorter generation times (r selected life strategy), which would hypothetically lead to a strong negative correlation. Given the lack of significance of the calculated correlation, however, this does not seem to be the case.
 
 **Question 3**
 
-Using the IUCN API token provided (or via your own), or via the IUCN csv file provided
-explore, using statistical models, whether generation time, on the one hand, and population
-growth rate, on the other hand, predict the Red List conservation status of your species
-subset.
+Using the IUCN API token provided (or via your own), or via the IUCN csv file provided explore, using statistical models, whether generation time, on the one hand, and population growth rate, on the other hand, predict the Red List conservation status of your species subset.
+
+```{r}
+#Ensuring that the dataset only has one entry for each species, by picking the matrix based on the most recent publication
+comadre_reptiles_clean_unique <- as.data.frame(comadre_reptiles_clean) |>  
+  group_by(SpeciesAccepted) |>  
+  slice_max(YearPublication, n = 1, with_ties = FALSE) |>  #Picking the matrix with highest publication year
+  ungroup()
+
+#Importing IUCN data
+IUCN_data <- read.csv("IUCN_comadre_compadre.csv")
+
+#Inserting the conservation status information back into the dataset
+comadre_reptiles_iucn <- comadre_reptiles_clean_unique |>
+  left_join(IUCN_data, by = "SpeciesAccepted") |>  # Merge datasets
+  mutate(
+    IUCNstatus = recode(IUCNstatus,  # Recode abbreviations to full names
+      "EN" = "Endangered",
+      "VU" = "Vulnerable",
+      "NT" = "Near Threatened",
+      "LC" = "Least Concern",
+      .missing = "Not Assessed"  # Replace NA values
+    ),
+    IUCNstatus = factor(IUCNstatus, levels = c(
+      "Endangered", "Vulnerable", "Near Threatened", "Least Concern", "Not Assessed"
+    )),
+    iucn_colour = recode(IUCNstatus,  # Assign colors directly
+      "Endangered" = "Orange",
+      "Vulnerable" = "Yellow",
+      "Near Threatened" = "Dark green",
+      "Least Concern" = "Green",
+      "Not Assessed" = "Blue"
+    ))
+
+#One of the turtles, Podocnemis expansa, remains NA in the table as it has a unique conservation status - CD or conservation dependent. To rectify the NA, we will place it in the closest IUCN category.
+
+comadre_reptiles_iucn$IUCNstatus[18] <- "Near Threatened"
+comadre_reptiles_iucn$iucn_colour[18] <- "Dark green"
+```
+
+```{r}
+ggplot(comadre_reptiles_iucn, aes(x = IUCNstatus, y = gen_T, 
+                         fill = IUCNstatus)) + 
+  geom_boxplot(show.legend = F) +
+  geom_jitter(width = 0.2, show.legend = F) +
+  scale_fill_viridis_d(option = "B", begin = 0.3, end = 0.8) +
+  labs(x = "IUCN redlist status", y = "Generation time (years)") +
+  theme_classic(base_size = 14)
+```
+
+```{r}
+ANOVA_gen_T <- aov(gen_T~IUCNstatus, data = comadre_reptiles_iucn)
+summary(ANOVA_gen_T)
+```
+
+***Generation Time:*** From the above box plot and ANOVA, we can see that generation time is not significantly predicted by conservation status (Pr\>F \>\> 0.05). The distribution is varied, with certain conservation categories such as least concern having individuals with both short and extremely long generation times.
+
+```{r}
+ggplot(comadre_reptiles_iucn, aes(x = IUCNstatus, y = lambda, 
+                         fill = IUCNstatus)) + 
+  geom_boxplot(show.legend = F) +
+  geom_jitter(width = 0.2, show.legend = F) +
+  scale_fill_viridis_d(option = "B", begin = 0.3, end = 0.8) +
+  labs(x = "IUCN redlist status", y = "Population growth rate") +
+  theme_classic(base_size = 14)
+```
+
+```{r}
+ANOVA_gen_T <- aov(lambda~IUCNstatus, data = comadre_reptiles_iucn)
+summary(ANOVA_gen_T)
+```
+
+***Growth Rate:*** Similarly, we can see that population growth rate is not significantly predicted by conservation status (Pr\>F \>\> 0.05). The distribution is more uniform, however, with most IUCN categories  clustering around a $\lambda$ of one. 
+
+**Question 4**
+
+Plot the values of generation time and of population growth rate of your species on the
+phylogeny provided to you (COMPADRE-COMADRE_Phylo_June_16_2019.tre). Is there
+any visual evidence of phylogenetic inertia in those traits? Why?
+
+```{r}
+#Load tree
+tree <- read.tree("COMPADRE-COMADRE_Phylo_June_16_2019.tre")
+#Clean tips
+tree$tip.label <- gsub("_", " ", tree$tip.label)
+#Prune tree to only keep tips that are in the reptiles dataframe
+pruned_tree <- drop.tip(tree, setdiff(tree$tip.label, comadre_reptiles_iucn$SpeciesAccepted))
+
+#Removing the species that are not represented as tips on the tree - "Sceloporus mucronatus mucronatus" & "Xenosaurus sp." and ordering the species
+
+order_comadre_iucn <- comadre_reptiles_iucn |>
+  filter(SpeciesAccepted %in% pruned_tree$tip.label) |>   # Filter rows based on tip.label
+  arrange(match(SpeciesAccepted, pruned_tree$tip.label)) # Reorder the rows to match tip.label order
+
+
+
+```
+
