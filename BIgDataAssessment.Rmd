@@ -7,7 +7,7 @@ output:
 
 Candidate Number: 1073601
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, include = F }
 # List of required packages
 required_packages <- c(
   "mosaic", "phytools", "popbio", "popdemo", "Rage", "Rcompadre",
@@ -186,7 +186,7 @@ summary(ANOVA_gen_T)
 
 Plot the values of generation time and of population growth rate of your species on the phylogeny provided to you (COMPADRE-COMADRE_Phylo_June_16_2019.tre). Is there any visual evidence of phylogenetic inertia in those traits? Why?
 
-```{r}
+```{r warning=F}
 #Load tree
 tree <- read.tree("COMPADRE-COMADRE_Phylo_June_16_2019.tre")
 #Clean tips
@@ -257,7 +257,7 @@ dotTree(pruned_tree,perfmode,colors= perf_cols,
     )
 ```
 
-The above tree was plotted using the dotTree function, and the population performance variable was added using the mutate function.
+The above tree was plotted using the dotTree function, and the population performance variable was added using the mutate function. Population growth rate above or below one seem to be conserved, with clades tending to be either wholly increasing or decreasing with few variations.
 
 ```{r}
 #Making a factor for iucn category
@@ -293,7 +293,8 @@ legend("bottomleft",
 
 
 ```
-The graph above is made again using the dotTree function, but this time a matrix containing population performance and IUCN information is used to show both factors. There does not seem to be a clear correlation between the two, suggesting that even populations that are growing can be endangered. 
+
+The graph above is made again using the dotTree function, but this time a matrix containing population performance and IUCN information is used to show both factors. There does not seem to be a clear correlation between the two: even populations that are growing can be endangered and vice versa.
 
 
 
