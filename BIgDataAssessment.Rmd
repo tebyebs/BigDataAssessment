@@ -46,5 +46,39 @@ comadre_reptiles <- subset(comadre_rep_flag,
 
 **Question 1**
 
-Show a histogram of the population growth rate, and a separate histogram of the generation
-time of your subset of species. Describe the patterns. Do they make sense to you?
+Show a histogram of the population growth rate, and a separate histogram of the generation time of your subset of species. Describe the patterns. Do they make sense to you?
+
+```{r warning=FALSE}
+#Calculating the population growth rate by finding the dominant eigenvalue of each matrix, then storing this in the reptiles dataframe
+comadre_reptiles$lambda <- unlist(lapply(matA(comadre_reptiles), popbio::lambda))
+
+#Calculating gen time using the rage function
+comadre_reptiles$gen_T <- mapply(Rage::gen_time, matU(comadre_reptiles), matF(comadre_reptiles))
+
+#ensuring a clean version of the dataset for phylogenies
+comadre_reptiles_clean <- comadre_reptiles |>
+  filter(!is.na(lambda), 
+         !is.na(gen_T), 
+         !is.infinite(gen_T))
+```
+
+```{r warnings = F}
+#Plotting the pop growth rate histogram - red abline represents a stable population that is neither growing nor shrinking
+hist(comadre_reptiles_clean$lambda, xlab= "Population growth rate", main = NULL) 
+  abline(v = 1, col = 'red', lty = 2, lwd = 2)
+```
+
+```{r warnings = F}
+#Plotting generation time histogram
+hist(comadre_reptiles_clean$gen_T, xlab = "Generation time (years)", main = NULL)
+```
+
+The pop growth rate histogram shows that the majority of populations have a $\lambda$ close to 1, suggesting relatively stable population growth rates. There are, however, a few populations that have $\lambda$ values significantly lower than 1, suggesting a declining population, perhaps due to climate change. Conversely, there is a wide variety in populations with $\lambda$ values greater than one, with some populations growing steadily but others with explosive growth, such as the population with a $\lambda$ close to 2.5.
+
+Similarly, most of the generation times are below 20 years, suggesting that most studied reptiles have short reproductive time-spans. The distribution is skewed, however, with some outlier populations that have longer (20-40 years) or significantly longer (50-80 years) generation times, but the frequency of such populations declines as the generation time increases.
+
+**Question 2**
+
+Fit a model to explore whether the generation time and population growth rate of your
+species’ populations are correlated. Would you have expected them to be correlated? Why?
+
