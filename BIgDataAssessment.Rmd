@@ -150,10 +150,10 @@ comadre_reptiles_iucn$iucn_colour[18] <- "Dark green"
 
 ```{r}
 ggplot(comadre_reptiles_iucn, aes(x = IUCNstatus, y = gen_T, 
-                         fill = IUCNstatus)) + 
+                         fill = iucn_colour)) + 
   geom_boxplot(show.legend = F) +
   geom_jitter(width = 0.2, show.legend = F) +
-  scale_fill_viridis_d(option = "B", begin = 0.3, end = 0.8) +
+  scale_fill_identity() +
   labs(x = "IUCN redlist status", y = "Generation time (years)") +
   theme_classic(base_size = 14)
 ```
@@ -167,10 +167,10 @@ summary(ANOVA_gen_T)
 
 ```{r}
 ggplot(comadre_reptiles_iucn, aes(x = IUCNstatus, y = lambda, 
-                         fill = IUCNstatus)) + 
+                         fill = iucn_colour)) + 
   geom_boxplot(show.legend = F) +
   geom_jitter(width = 0.2, show.legend = F) +
-  scale_fill_viridis_d(option = "B", begin = 0.3, end = 0.8) +
+  scale_fill_identity() +
   labs(x = "IUCN redlist status", y = "Population growth rate") +
   theme_classic(base_size = 14)
 ```
@@ -180,13 +180,11 @@ ANOVA_gen_T <- aov(lambda~IUCNstatus, data = comadre_reptiles_iucn)
 summary(ANOVA_gen_T)
 ```
 
-***Growth Rate:*** Similarly, we can see that population growth rate is not significantly predicted by conservation status (Pr\>F \>\> 0.05). The distribution is more uniform, however, with most IUCN categories  clustering around a $\lambda$ of one. 
+***Growth Rate:*** Similarly, we can see that population growth rate is not significantly predicted by conservation status (Pr\>F \>\> 0.05). The distribution is more uniform, however, with most IUCN categories clustering around a $\lambda$ of one.
 
 **Question 4**
 
-Plot the values of generation time and of population growth rate of your species on the
-phylogeny provided to you (COMPADRE-COMADRE_Phylo_June_16_2019.tre). Is there
-any visual evidence of phylogenetic inertia in those traits? Why?
+Plot the values of generation time and of population growth rate of your species on the phylogeny provided to you (COMPADRE-COMADRE_Phylo_June_16_2019.tre). Is there any visual evidence of phylogenetic inertia in those traits? Why?
 
 ```{r}
 #Load tree
@@ -198,11 +196,35 @@ pruned_tree <- drop.tip(tree, setdiff(tree$tip.label, comadre_reptiles_iucn$Spec
 
 #Removing the species that are not represented as tips on the tree - "Sceloporus mucronatus mucronatus" & "Xenosaurus sp." and ordering the species
 
-order_comadre_iucn <- comadre_reptiles_iucn |>
+order_comadre_reptiles_iucn <- comadre_reptiles_iucn |>
   filter(SpeciesAccepted %in% pruned_tree$tip.label) |>   # Filter rows based on tip.label
   arrange(match(SpeciesAccepted, pruned_tree$tip.label)) # Reorder the rows to match tip.label order
 
-
+row.names(order_comadre_reptiles_iucn) <- order_comadre_reptiles_iucn$SpeciesAccepted
 
 ```
 
+```{r}
+#Calculating log lambdas for the tips to be used in phylogeny
+log_lambdas <- log(setNames(order_comadre_reptiles_iucn$lambda, rownames(order_comadre_reptiles_iucn)))
+
+# Using a contMap to reconstruct ancestral traits for population growth rate
+reptile_contMap_lambda <- contMap(pruned_tree, log_lambdas,plot=FALSE,res=200)
+reptile_contMap_lambda <- setMap(reptile_contMap_lambda, c("white","#FFFFB2","#FECC5C","#FD8D3C","#E31A1C"))
+plot(reptile_contMap_lambda, fsize=c(0.7,0.8), leg.txt="log(population growth rate)")
+par(mar=c(5.1,4.1,4.1,2.1)) ## reset margins to default
+```
+
+```{r}
+#Repeating the process for generation time
+log_gen_T <- log(setNames(order_comadre_reptiles_iucn$gen_T, rownames(order_comadre_reptiles_iucn)))
+reptiles_contMap_gen_T <- contMap(pruned_tree, log_gen_T,plot=FALSE,res=200)
+reptiles_contMap_gen_T <- setMap(reptiles_contMap_gen_T, c("white","light blue","blue","violet","purple"))
+plot(reptiles_contMap_gen_T, fsize=c(0.7,0.8), leg.txt="log(generation time) (years)")
+```
+
+***Population growth rate:*** The phylogeny shows that most ancestral nodes are predicted to have relatively even growth rates around 1, with faster growing species evolving very suddenly towards the present. This is paradoxical - suggesting high phylogenetic inertia in the past followed by significantly lower inertia today, but can be explained by sampling bias - the ancestors with very low growth rates were predisposed to go extinct, so it is likely growth rate has always been a trait of low inertia, but we lack the sampling to show this.
+
+***Generation time:*** The phylogenetic tree shows high levels of inertia, with clades such as crocodylus maintaining long generation times throughout history. Clades that have evolved shorter generation times, on the other hand, such as Xenosaurus or Sceloporus, are unlikely to recover longer generation times as changing a vital life history trait like lifespan is very difficult.
+
+**Question 5**
