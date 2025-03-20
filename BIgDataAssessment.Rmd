@@ -62,23 +62,52 @@ comadre_reptiles_clean <- comadre_reptiles |>
          !is.infinite(gen_T))
 ```
 
-```{r warnings = F}
+```{r warning = F}
 #Plotting the pop growth rate histogram - red abline represents a stable population that is neither growing nor shrinking
 hist(comadre_reptiles_clean$lambda, xlab= "Population growth rate", main = NULL) 
   abline(v = 1, col = 'red', lty = 2, lwd = 2)
 ```
 
-```{r warnings = F}
+```{r warning = F}
 #Plotting generation time histogram
 hist(comadre_reptiles_clean$gen_T, xlab = "Generation time (years)", main = NULL)
 ```
 
-The pop growth rate histogram shows that the majority of populations have a $\lambda$ close to 1, suggesting relatively stable population growth rates. There are, however, a few populations that have $\lambda$ values significantly lower than 1, suggesting a declining population, perhaps due to climate change. Conversely, there is a wide variety in populations with $\lambda$ values greater than one, with some populations growing steadily but others with explosive growth, such as the population with a $\lambda$ close to 2.5.
+The pop growth rate histogram shows that the majority of populations have a $\lambda$ close to 1, suggesting relatively stable population growth rates. There are, however, a few populations that have $\lambda$ values significantly lower than 1, suggesting a declining population, perhaps due to climate change. Conversely, there is a wide variety in populations with $\lambda$ values greater than one, with some populations growing steadily but others with explosive growth, such as the population with a $\lambda$ close to 2.5. As a result, the overall distribution is asymmetrical.
 
 Similarly, most of the generation times are below 20 years, suggesting that most studied reptiles have short reproductive time-spans. The distribution is skewed, however, with some outlier populations that have longer (20-40 years) or significantly longer (50-80 years) generation times, but the frequency of such populations declines as the generation time increases.
 
 **Question 2**
 
-Fit a model to explore whether the generation time and population growth rate of your
-species’ populations are correlated. Would you have expected them to be correlated? Why?
+Fit a model to explore whether the generation time and population growth rate of your species’ populations are correlated. Would you have expected them to be correlated? Why?
 
+```{r}
+
+# Scatter plot
+ggplot(comadre_reptiles_clean, aes(x = lambda, y = gen_T )) +
+  geom_point(alpha = 0.7) +  
+  labs(y = "Generation Time (gen_T)", 
+       x = "Population Growth Rate (lambda)", 
+       title = "Population Growth Rate vs. Scatter Plot of Generation Time") +
+  theme_classic()
+
+```
+
+From the previous question and the above exploratory scatter plot, we can see that both $\lambda$ and generation time are **not** normally distributed. Therefore, we cannot use a linear model as this would violate the assumption of normality. Instead, we will use a spearmans correlation test:
+
+```{r warning = F}
+# Spearman's correlation test
+spearman_result <- cor.test(comadre_reptiles_clean$lambda, 
+                            comadre_reptiles_clean$gen_T, 
+                            method = "spearman")
+
+print(spearman_result)
+```
+Interestingly, we observe that there is no significant correlation as p > 0.05, with a very weak negative correlation coefficient (rho) of -0.119. This is surprising as one might have expected species with higher population growth rates to have shorter generation times, which would hypothetically lead to a strong negative correlation. Given the lack of significance of the calculated correlation, however, this does not seem to be the case. 
+
+**Question 3**
+
+Using the IUCN API token provided (or via your own), or via the IUCN csv file provided
+explore, using statistical models, whether generation time, on the one hand, and population
+growth rate, on the other hand, predict the Red List conservation status of your species
+subset.
